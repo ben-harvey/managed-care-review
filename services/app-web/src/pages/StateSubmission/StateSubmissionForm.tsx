@@ -142,7 +142,7 @@ export const StateSubmissionForm = (): React.ReactElement => {
     const [updateFormData] = useDebouncedMutation<
         UpdateHealthPlanFormDataMutation,
         object
-    >(UpdateHealthPlanFormDataDocument, undefined, 200)
+    >(UpdateHealthPlanFormDataDocument, undefined, 500)
 
     // When the new API is done, we'll call the new API here
     const updateDraftHealthPlanPackage = async (
