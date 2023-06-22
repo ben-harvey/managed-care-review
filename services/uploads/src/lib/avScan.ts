@@ -1,6 +1,11 @@
 import { S3UploadsClient } from '../deps/s3'
 import { ClamAV } from '../deps/clamAV'
-import { generateVirusScanTagSet, ScanStatus } from './tags'
+import {
+    generateVirusScanTagSet,
+    ScanStatus,
+    VIRUS_SCAN_TIMESTAMP_KEY,
+    VIRUS_SCAN_STATUS_KEY,
+} from './tags'
 import { scanFiles } from './scanFiles'
 
 export async function scanFile(
@@ -17,6 +22,39 @@ export async function scanFile(
     if (fileSize instanceof Error) {
         return fileSize
     }
+
+    // Get current tags
+    const currentTagsResult = await s3Client.getObjectTags(key, bucket)
+    if (currentTagsResult instanceof Error) {
+        return currentTagsResult
+    }
+
+    let hasVirusScanStatusTag = false
+    let hasVirusScanTimeStampTag = false
+
+    // Check if virus scan tags already exist
+    for (const tag of currentTagsResult) {
+        if (tag.Key === VIRUS_SCAN_STATUS_KEY) {
+            hasVirusScanStatusTag = true
+        }
+        if (tag.Key === VIRUS_SCAN_TIMESTAMP_KEY) {
+            hasVirusScanTimeStampTag = true
+        }
+    }
+
+    // If both exist skip scanning and adding the tags
+    if (hasVirusScanStatusTag && hasVirusScanTimeStampTag) {
+        console.info('File already scanned, skipping additional scanning.')
+        return
+    }
+
+    // Remove virus scan tags, at this point only one would exist and to keep both tags in sync we want to remove the single tag.
+    // Duplicate tags would cause avScan errors.
+    const filteredCurrentTags = currentTagsResult.filter(
+        (tags) =>
+            tags.Key !== VIRUS_SCAN_TIMESTAMP_KEY &&
+            tags.Key !== VIRUS_SCAN_STATUS_KEY
+    )
 
     let tagResult: ScanStatus | undefined = undefined
     if (fileSize > maxFileSize) {
@@ -44,16 +82,12 @@ export async function scanFile(
     }
 
     const tags = generateVirusScanTagSet(tagResult)
-    const duplicateTags = [...tags.TagSet, ...tags.TagSet]
     // tagObject replaces existing tags, so we get the tags, add the new ones, and then set them all back
-    const currentTagsResult = await s3Client.getObjectTags(key, bucket)
-    if (currentTagsResult instanceof Error) {
-        return currentTagsResult
-    }
-
-    const updatedTags = { TagSet: currentTagsResult.concat(duplicateTags) }
+    const updatedTags = { TagSet: filteredCurrentTags.concat(tags.TagSet) }
 
     const err = await s3Client.tagObject(key, bucket, updatedTags)
+    console.info('Updated tags ', updatedTags)
+
     if (err instanceof Error) {
         return err
     }

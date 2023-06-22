@@ -4,7 +4,7 @@ import { Tag } from '@aws-sdk/client-s3'
 const VIRUS_SCAN_STATUS_KEY = 'virusScanStatus'
 const VIRUS_SCAN_TIMESTAMP_KEY = 'virusScanTimestamp'
 const ScanStatusValues = ['CLEAN', 'INFECTED', 'ERROR', 'SKIPPED'] as const
-type ScanStatus = typeof ScanStatusValues[number]
+type ScanStatus = (typeof ScanStatusValues)[number]
 
 function isScanStatus(value: unknown): value is ScanStatus {
     if (typeof value === 'string') {
@@ -84,6 +84,8 @@ export {
     parseUploadedAtFromTags as uploadedAt,
     generateUploadedAtTagSet,
     isScanStatus,
+    VIRUS_SCAN_STATUS_KEY,
+    VIRUS_SCAN_TIMESTAMP_KEY,
 }
 
 export type { ScanStatus }
