@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { Form as UswdsForm } from '@trussworks/react-uswds'
 import { FieldArray, FieldArrayRenderProps, Formik, FormikErrors } from 'formik'
 import { useNavigate } from 'react-router-dom'
@@ -118,9 +118,9 @@ export const RateDetails = ({
 
     // form validation state management
     const [focusErrorSummaryHeading, setFocusErrorSummaryHeading] =
-        React.useState(false)
-    const errorSummaryHeadingRef = React.useRef<HTMLHeadingElement>(null)
-    const [shouldValidate, setShouldValidate] = React.useState(showValidations)
+        useState(false)
+    const errorSummaryHeadingRef = useRef<HTMLHeadingElement>(null)
+    const [shouldValidate, setShouldValidate] = useState(showValidations)
 
     useEffect(() => {
         // Focus the error summary heading only if we are displaying
@@ -132,8 +132,8 @@ export const RateDetails = ({
     }, [focusErrorSummaryHeading])
 
     // multi-rates state management
-    const [focusNewRate, setFocusNewRate] = React.useState(false)
-    const newRateNameRef = React.useRef<HTMLElement | null>(null)
+    const [focusNewRate, setFocusNewRate] = useState(false)
+    const newRateNameRef = useRef<HTMLElement | null>(null)
     const [newRateButtonRef, setNewRateButtonFocus] = useFocus() // This ref.current is always the same element
 
     const rateDetailsFormSchema = RateDetailsFormSchema({
@@ -141,11 +141,15 @@ export const RateDetails = ({
         'supporting-docs-by-rate': supportingDocsByRate,
     })
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (focusNewRate) {
-            newRateNameRef?.current?.focus()
-            setFocusNewRate(false)
-            newRateNameRef.current = null
+            const legends = document.querySelectorAll('legend[tabindex="-1"]')
+            const lastLegend = legends[legends.length - 1] as HTMLElement
+            lastLegend.focus()
+
+            // newRateNameRef?.current?.focus()
+            // setFocusNewRate(false)
+            // newRateNameRef.current = null
         }
     }, [focusNewRate])
 

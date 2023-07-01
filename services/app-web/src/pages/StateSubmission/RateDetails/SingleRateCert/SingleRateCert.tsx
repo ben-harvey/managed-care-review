@@ -147,9 +147,11 @@ export const SingleRateCert = ({
             key={key}
             id={`${fieldNamePrefix}.container.${rateInfo.id}`}
             legend={
-                displayAsStandaloneRate
-                    ? `Rate certification`
-                    : `Rate certification ${rateCertNumber}`
+                <legend tabIndex={-1}>
+                    {displayAsStandaloneRate
+                        ? `Rate certification`
+                        : `Rate certification ${rateCertNumber}`}
+                </legend>
             }
             className={styles.rateCertContainer}
         >
